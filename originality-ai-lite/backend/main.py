@@ -23,15 +23,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger("originality_ai")
 
-class Settings:
+class Settings(BaseModel):
     """Centralized configuration manager"""
     PROJECT_NAME: str = "Originality AI Lite (Enterprise)"
     VERSION: str = "2.0.0"
-    API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
+    API_KEY: str = Field(default_factory=lambda: os.getenv("NVIDIA_API_KEY", ""))
     ALLOWED_ORIGINS: List[str] = ["*"]
     
     # AI Model configuration
-    MODEL_NAME: str = "deepseek-ai/deepseek-v3.2"
+    MODEL_NAME: str = "bytedance/seed-oss-36b-instruct"
     TEMPERATURE: float = 1.0  # Maximize perplexity
     TOP_P: float = 0.95       # Allow broader vocabulary selection
 
@@ -67,8 +67,8 @@ class AIService:
 
     async def check_plagiarism(self, text: str) -> PlagiarismResponse:
         """Analyzes text for plagiarism and returns structured data."""
+        sys_prompt = "You are an expert plagiarism detection system. Return ONLY valid JSON with no extra commentary, no markdown, no code blocks."
         prompt = f"""Analyze the following text for plagiarism and AI-generated patterns.
-Return ONLY valid JSON with no extra commentary, no markdown, no code blocks:
 {{
   "score": <number between 0 and 100>,
   "suspicious_sentences": ["sentence1", "sentence2"],
@@ -78,13 +78,18 @@ Where score represents the likelihood of plagiarism/AI-generation (0 = fully ori
 Text:
 {text}"""
         try:
-            logger.info("Sending plagiarism analysis request to DeepSeek...")
+            logger.info("Sending plagiarism analysis request to AI model...")
             completion = await self.client.chat.completions.create(
                 model=settings.MODEL_NAME,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": prompt}
+                ],
                 temperature=0.1,
                 top_p=1.0,
-                max_tokens=2048
+                max_tokens=2048,
+                extra_body={"thinking_budget": -1},
+                stream=False
             )
             raw = completion.choices[0].message.content.strip()
             
@@ -170,17 +175,15 @@ Text:
         return text + f"\n\n*(Note: Generated securely via Advanced Native Fallback Engine | Fallback Trigger Reason: {error_reason})*"
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
-        """Transforms AI-generated text into highly human-like text."""
-        prompt = f"""Rewrite the following text to completely bypass AI detection tools (Turnitin, Originality.ai, GPTZero) and achieve a 0% AI score.
+        """Transforms AI-generated text into highly human-like, 0% plagiarism text."""
+        sys_prompt = "You are a master academic editor. Your objective is to rewrite the provided text so that it passes Turnitin and Originality.ai with a 0% AI score AND a strictly 0% Plagiarism score."
+        prompt = f"""CRITICAL INSTRUCTIONS FOR 0% AI & 0% PLAGIARISM:
+1. COMPLETE RESTRUCTURING (ANTI-PLAGIARISM): Do NOT just swap words (synonym spinning). You must fundamentally rebuild the entire logical structure of the text from the ground up. Synthesize the core meaning and rewrite the ideas entirely in a new, original sequence.
+2. MAXIMIZE BURSTINESS (ANTI-AI): AI inherently balances sentence length. You must violently break this. Write an extremely short sentence. Follow it with an incredibly long, 35+ word, multi-clause sentence.
+3. ORGANIC SYNTAX (ANTI-AI): Inject semicolons (;) and em-dashes (—) natively. Never use generic AI transitional phrases like "Furthermore," "Moreover," "In conclusion," "Crucial," "Paramount," or "It is important to note."
+4. RIGOROUS & FACTUAL: Keep the absolute academic truth, terminology, and metrics of the original text, but present them in a dramatically different, highly complex flow.
 
-CRITICAL INSTRUCTIONS TO BEAT AI DETECTORS:
-1. MAXIMIZE BURSTINESS: AI naturally balances sentence length. You must deliberately imbalance it. Inject very short sentences (e.g., "This is critical.") right next to excessively long, multi-clause, highly complex sentences. This is the #1 way to trick detectors.
-2. BAN CONSTANT NOUN-VERB STRUCTURE: Do not start every sentence with "The researcher analyzed..." or "Technology has...". Vary your sentence starters. Start with dependent clauses, prepositional phrases, and occasionally conjunctions ("But", "And").
-3. HUMANIZED VOCABULARY: Eliminate 100% of standard AI academic filler (e.g., "Furthermore," "Moreover," "Crucial," "Paramount," "Undeniably," "Navigating the"). Use raw, direct, highly advanced human academic phrasing.
-4. STRUCTURAL ANOMALIES: Forceably inject semicolons (;) and em-dashes (—) throughout the text. AI algorithms rarely use these natively, so their presence signals human authorship.
-5. STRICTLY PROFESSIONAL: Do not sound conversational or disorganized. Remain an elite, highly professional academic. Keep all original metrics, facts, and intent intact.
-
-Return strictly the rewritten text and nothing else. No introductions or formatting marks.
+Return strictly the finalized, plagiarism-free text. Do not include markdown formatting or conversational filler.
 
 Text to Rewrite:
 {text}"""
@@ -188,11 +191,14 @@ Text to Rewrite:
         try:
             completion = await self.client.chat.completions.create(
                 model=settings.MODEL_NAME,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.9, 
-                top_p=0.9,
-                max_tokens=1000,
-                extra_body={"chat_template_kwargs": {"thinking": False}},
+                messages=[
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=1.0, 
+                top_p=0.95,
+                max_tokens=4096,
+                extra_body={"thinking_budget": -1},
                 stream=False
             )
             
