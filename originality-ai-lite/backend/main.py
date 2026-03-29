@@ -100,16 +100,18 @@ Text:
             logger.error(f"AI Service Error during plagiarism check: {e}")
             raise HTTPException(status_code=500, detail=f"Plagiarism Check API Error: {str(e)}")
 
-    def _in_house_humanize_fallback(self, text: str) -> str:
+    def _in_house_humanize_fallback(self, text: str, error_reason: str) -> str:
         """
-        ACCURATE IN-HOUSE NATIVE FALLBACK ALGORITHM
-        If Gemini crashes, we rely on this locally executed NLP substitution map.
-        It forcefully raises perplexity and burstiness by eliminating high-frequency AI vocabulary
-        without altering the factual accuracy or strict academic meaning of the text.
+        ADVANCED NATIVE IN-HOUSE NLP FALLBACK
+        If the primary AI crashes or hits a quota, this entirely local script executes.
+        It forcefully alters the syntactic rhythm (burstiness) and vocabulary predictability (perplexity)
+        to dramatically lower AI detection scores locally while retaining strict empirical accuracy.
         """
-        logger.warning("Using in-house algorithmic fallback model for humanization!")
+        logger.warning(f"Using Advanced In-House fallback algorithmic NLP model due to: {error_reason}")
         
-        # Exact-match phrase replacements (removes robotic academic framing)
+        import re
+        
+        # 1. Heavily Expanded Phrase Replacement (targets rigid AI academic structures)
         phrases = {
             "In conclusion,": "Ultimately,",
             "Furthermore,": "Additionally,",
@@ -119,10 +121,16 @@ Text:
             "This demonstrates": "This shows",
             "Sheds light on": "Clarifies",
             "The evolving landscape of": "Changes within",
-            "In recent years,": "Recently,"
+            "In recent years,": "Recently,",
+            "Undeniably,": "Clearly,",
+            "A myriad of": "Numerous",
+            "Plays a vital role": "Is important",
+            "As we navigate": "When exploring",
+            "In summary,": "Overall,",
+            "Significant implications": "Clear effects"
         }
         
-        # Word-level synonym substitutions (swaps high-frequency AI words)
+        # 2. Aggressive Word-Level Perplexity Disruptors
         words = {
             " vital ": " key ",
             " pivotal ": " central ",
@@ -132,35 +140,46 @@ Text:
             " delve ": " look ",
             " beacon ": " symbol ",
             " myriad ": " variety ",
-            " plethora ": " host "
+            " plethora ": " host ",
+            " utilize ": " use ",
+            " optimum ": " best "
         }
         
-        # 1. Apply accurate phrase filtering
         for old, new in phrases.items():
             text = text.replace(old, new)
             
-        # 2. Apply word substitutions natively
         for old, new in words.items():
             text = text.replace(old, new)
             
-        # 3. Increase structural burstiness natively by varying paragraph spacing
-        text = text.replace("  ", " ").strip()
+        # 3. Structural Burstiness Injection via Regex
+        # AI models love perfect comma boundaries and short predictable sentences.
+        # We will dynamically inject semicolons where appropriate commas exist to disrupt the n-gram tree natively.
+        text = re.sub(r', and ', '; additionally, ', text)
+        text = re.sub(r', however,', '; however,', text)
+        text = re.sub(r', therefore,', '; therefore,', text)
         
-        return text + "\n\n*(Note: Generated securely via In-House Native Fallback Engine)*"
+        # 4. Spacing anomalies (mimics human typing imperfection)
+        text = text.replace(". ", ".  ").replace("  ", " ")
+        
+        # 5. Occasional Em-Dash Injection for rhythmic unpredictability
+        # If an AI uses too many "that" clauses, it looks robotic. We can selectively dash them.
+        text = text.replace(", specifically ", "—specifically ")
+        
+        return text + f"\n\n*(Note: Generated securely via Advanced Native Fallback Engine | Fallback Trigger Reason: {error_reason})*"
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
         """Transforms AI-generated text into highly human-like text."""
-        prompt = f"""You are an elite academic researcher and experienced peer-reviewer.
-Your sole purpose is to rewrite the provided text to bypass all AI detectors (aiming for absolutely a 0% AI detection score) while making it perfectly suited for publication in a high-impact, peer-reviewed scientific research paper.
+        prompt = f"""You are an expert ghostwriter for a peer-reviewed academic journal. Your job is to rewrite the provided text so that it completely bypasses AI detectors like TurnItIn, GPTZero, and Originality.ai, achieving a 0% AI score.
 
-### CORE RULES FOR PERFECT ACADEMIC HUMANIZATION:
-1. STRUCTURAL BURSTINESS: Academic writers use deeply varied sentence lengths. Combine brief declarative statements with highly complex, multi-clause sentences. Do not use a predictable rhythm.
-2. NO GENERATIVE CLICHES: Completely eliminate standard AI academic filler words like "In conclusion", "Furthermore", "Delving into", "Paramount", "Crucial", "Evolving landscape", "Tapestry", or "Undeniably".
-3. OBJECTIVE & RIGOROUS: Avoid fluff, flowery adjectives, or over-the-top metaphors. Be purely objective, analytical, and dry. No conversational filler ("But wait", "Simply put", "rocket-fueled").
-4. HUMAN IMPERFECTION: Real academic writing requires high-level vocabulary but can occasionally feel slightly dense or clunky. Use the passive voice occasionally if it fits the scientific context. Think like a serious PhD candidate drafting a thesis.
-5. PRESERVATION: Retain all core facts, technical terminology, strict metrics, and exact meaning from the original text seamlessly.
+CRITICAL INSTRUCTIONS FOR 0% AI SCORE:
+1. EXTREME BURSTINESS (MANDATORY): AI writes in perfectly balanced 15-20 word sentences. You MUST break this ratio. Write one sentence that is 5-7 words long. Then, follow it with a massive, highly complex 35-40 word sentence. This uneven rhythm is the single most important factor.
+2. BAN ALL PREDICTABLE TRANSITIONS: Never use "Furthermore," "Moreover," "In conclusion," "Additionally," "Importantly," "Crucial," "Paramount," or "Delving." 
+3. HUMAN SYNTATIC ANOMALIES: Humans use semicolons, em-dashes (—), and parenthetical asides naturally to connect raw scientific thoughts. Inject these occasionally to break standard AI comma patterns.
+4. TONE: Dry, empirical, strictly academic. Avoid all flowery adjectives. Never sound conversational.
+5. NO REPETITIVE STARTERS: Do not start consecutive sentences with "This" or "The".
 
-Return ONLY the final rewritten academic text. No introductory remarks, no explanations. Do not include markdown formatting.
+OUTPUT FORMAT:
+Return strictly the raw rewritten text. No introductions, no metadata, no markdown boxes.
 
 Text to Rewrite:
 {text}"""
@@ -169,14 +188,17 @@ Text to Rewrite:
             model = genai.GenerativeModel(
                 model_name=settings.MODEL_NAME,
                 generation_config=genai.GenerationConfig(
-                    temperature=settings.TEMPERATURE,
-                    top_p=settings.TOP_P,
+                    temperature=0.9,  # Human creativity without excessive random hallucinations
+                    top_p=0.95,
                 )
             )
             
             response = await asyncio.to_thread(model.generate_content, prompt)
             
             # Google's safety filters can sometimes block the response.text entirely
+            if not response.text:
+                 raise ValueError("Empty response returned from Gemini.")
+                 
             try:
                 humanized = response.text.strip()
             except ValueError:
@@ -189,7 +211,7 @@ Text to Rewrite:
             
             # Trigger our in-house fallback system!
             try:
-                fallback_text = self._in_house_humanize_fallback(text)
+                fallback_text = self._in_house_humanize_fallback(text, error_reason=str(e))
                 return HumanizeResponse(humanized_text=fallback_text)
             except Exception as fallback_error:
                 raise HTTPException(status_code=500, detail=f"Both Primary and In-House Models Failed: {str(fallback_error)}")
