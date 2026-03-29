@@ -171,16 +171,16 @@ Text:
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
         """Transforms AI-generated text into highly human-like text."""
-        prompt = f"""Rewrite the following text. Do not act like an academic, an expert, or a ghostwriter. If you do, AI detectors will mathematically recognize your underlying probabilistic weights.
+        prompt = f"""Rewrite the following text to completely bypass AI detection tools (Turnitin, Originality.ai, GPTZero) and achieve a 0% AI score.
 
-Instead, rewrite this exactly as if you are a stressed graduate student transcribing fragmented voice notes into a final draft at 3 AM. 
+CRITICAL INSTRUCTIONS TO BEAT AI DETECTORS:
+1. MAXIMIZE BURSTINESS: AI naturally balances sentence length. You must deliberately imbalance it. Inject very short sentences (e.g., "This is critical.") right next to excessively long, multi-clause, highly complex sentences. This is the #1 way to trick detectors.
+2. BAN CONSTANT NOUN-VERB STRUCTURE: Do not start every sentence with "The researcher analyzed..." or "Technology has...". Vary your sentence starters. Start with dependent clauses, prepositional phrases, and occasionally conjunctions ("But", "And").
+3. HUMANIZED VOCABULARY: Eliminate 100% of standard AI academic filler (e.g., "Furthermore," "Moreover," "Crucial," "Paramount," "Undeniably," "Navigating the"). Use raw, direct, highly advanced human academic phrasing.
+4. STRUCTURAL ANOMALIES: Forceably inject semicolons (;) and em-dashes (—) throughout the text. AI algorithms rarely use these natively, so their presence signals human authorship.
+5. STRICTLY PROFESSIONAL: Do not sound conversational or disorganized. Remain an elite, highly professional academic. Keep all original metrics, facts, and intent intact.
 
-CRITICAL ANTI-DETECTOR RULES:
-1. SHATTER PREDICTABILITY: Your sentence lengths must be violently uneven. Write a 4-word sentence. Follow it with a massive, meandering 45-word sentence containing multiple semicolons and tangent clauses.
-2. RAW VOCABULARY: Do not use flowery, "smart-sounding" words (e.g., myriad, plethora, delve, crucial, testament to). Use plain, direct, slightly imperfect human words. 
-3. UNUSUAL PUNCTUATION: Humans overuse em-dashes (—) and parentheses to inject random thoughts mid-sentence. You must do this at least twice.
-4. ABSOLUTE BAN LIST: Never use these transition phrases: "Furthermore", "In conclusion", "Additionally", "Moreover", "It is important to note". Start sentences abruptly with the core subject.
-5. NO INTRODUCTIONS: Just output the raw, rewritten text. Do not summarize.
+Return strictly the rewritten text and nothing else. No introductions or formatting marks.
 
 Text to Rewrite:
 {text}"""
