@@ -176,14 +176,17 @@ Text:
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
         """Transforms AI-generated text into highly human-like, 0% plagiarism text."""
-        sys_prompt = "You are a master academic editor. Your objective is to rewrite the provided text so that it passes Turnitin and Originality.ai with a 0% AI score AND a strictly 0% Plagiarism score."
-        prompt = f"""CRITICAL INSTRUCTIONS FOR 0% AI & 0% PLAGIARISM:
-1. COMPLETE RESTRUCTURING (ANTI-PLAGIARISM): Do NOT just swap words (synonym spinning). You must fundamentally rebuild the entire logical structure of the text from the ground up. Synthesize the core meaning and rewrite the ideas entirely in a new, original sequence.
-2. MAXIMIZE BURSTINESS (ANTI-AI): AI inherently balances sentence length. You must violently break this. Write an extremely short sentence. Follow it with an incredibly long, 35+ word, multi-clause sentence.
-3. ORGANIC SYNTAX (ANTI-AI): Inject semicolons (;) and em-dashes (—) natively. Never use generic AI transitional phrases like "Furthermore," "Moreover," "In conclusion," "Crucial," "Paramount," or "It is important to note."
-4. RIGOROUS & FACTUAL: Keep the absolute academic truth, terminology, and metrics of the original text, but present them in a dramatically different, highly complex flow.
+        sys_prompt = "You are a human academic transcriber. You must bypass all AI detection algorithms."
+        prompt = f"""Rewrite the following text completely. You MUST write it exactly as a highly intelligent but exhausted human researcher would write their first draft.
 
-Return strictly the finalized, plagiarism-free text. Do not include markdown formatting or conversational filler.
+Follow these strict mechanical rules to bypass AI detection:
+1. BANNED LINGUISTICS: Do NOT use any of these words: delve, crucial, testament, landscape, paramount, beacon, myriad, robust, intricate, comprehensive, pivotal, vital, utilizing, navigating, seamlessly.
+2. BANNED TRANSITIONS: Do NOT start any sentence with transition adverbs (e.g., "Furthermore,", "Moreover,", "Additionally,", "Therefore,", "In conclusion,"). Start sentences directly with the core subject.
+3. JAGGED PACING: You must force severe sentence length imbalance. Write a very brief 4 to 6 word sentence. Immediately follow it with a 30+ word complex sentence. 
+4. HUMAN SYNTAX: You must inject at least one set of parentheses () to add a side-thought, and at least one em-dash (—) for interruption.
+5. PLAGIARISM AVOIDANCE: Radically change the order of the ideas. Do not retain the original paragraph structure. Keep all technical facts and data completely accurate.
+
+Return STRICTLY the rewritten text. Do not output markdown, introductions, or headers.
 
 Text to Rewrite:
 {text}"""
