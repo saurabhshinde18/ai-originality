@@ -176,17 +176,17 @@ Text:
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
         """Transforms AI-generated text into highly human-like, 0% plagiarism text."""
-        sys_prompt = "You are a human academic transcriber. You must bypass all AI detection algorithms."
-        prompt = f"""Rewrite the following text completely. You MUST write it exactly as a highly intelligent but exhausted human researcher would write their first draft.
+        sys_prompt = "You are a professional human editor. You must bypass all AI detection algorithms like ZeroGPT."
+        prompt = f"""Rewrite the following text from scratch to bypass AI detectors.
 
-Follow these strict mechanical rules to bypass AI detection:
-1. BANNED LINGUISTICS: Do NOT use any of these words: delve, crucial, testament, landscape, paramount, beacon, myriad, robust, intricate, comprehensive, pivotal, vital, utilizing, navigating, seamlessly.
-2. BANNED TRANSITIONS: Do NOT start any sentence with transition adverbs (e.g., "Furthermore,", "Moreover,", "Additionally,", "Therefore,", "In conclusion,"). Start sentences directly with the core subject.
-3. JAGGED PACING: You must force severe sentence length imbalance. Write a very brief 4 to 6 word sentence. Immediately follow it with a 30+ word complex sentence. 
-4. HUMAN SYNTAX: You must inject at least one set of parentheses () to add a side-thought, and at least one em-dash (—) for interruption.
-5. PLAGIARISM AVOIDANCE: Radically change the order of the ideas. Do not retain the original paragraph structure. Keep all technical facts and data completely accurate.
+Follow these strict mechanical rules:
+1. BAN TRIPLETS (THE RULE OF THREE): AI models always list exactly three examples (e.g., "apps, platforms, and smart devices" or "choose better, work faster, and learn"). You are strictly forbidden from writing lists of three things. Use only ONE singular, broad concept at a time instead of listing examples.
+2. CONTINUOUS NATURAL FLOW: Stop alternating between 4-word sentences and 40-word sentences. Use a natural, messy, medium-length human flow (around 10-18 words per sentence). Do not write massively long, multi-clause run-on sentences.
+3. BANNED FILLER: Do NOT use standard AI vocabulary: crucial, paramount, landscape, myriad, testament, robust, intricate, seamless, pivotal, utilize, delving.
+4. BANNED TRANSITIONS: Do NOT start sentences with Therefore, Moreover, Furthermore, Thus, However, or Additionally.
+5. CASUAL ACADEMIC TONE: Write as if you are a highly intelligent human expert directly explaining a concept verbally to a peer. Do not sound like a structured textbook.
 
-Return STRICTLY the rewritten text. Do not output markdown, introductions, or headers.
+Return STRICTLY the rewritten text. No introductions.
 
 Text to Rewrite:
 {text}"""
