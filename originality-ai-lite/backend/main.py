@@ -30,7 +30,7 @@ class Settings:
     ALLOWED_ORIGINS: List[str] = ["*"]
     
     # AI Model configuration
-    MODEL_NAME: str = "gemini-1.5-flash-latest"
+    MODEL_NAME: str = "gemini-2.0-flash"
     TEMPERATURE: float = 1.2  # Maximize perplexity
     TOP_P: float = 0.95       # Allow broader vocabulary selection
 
