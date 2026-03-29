@@ -192,18 +192,12 @@ Text to Rewrite:
                 messages=[{"role": "user", "content": prompt}],
                 temperature=settings.TEMPERATURE,
                 top_p=settings.TOP_P,
-                max_tokens=8192,
-                extra_body={"chat_template_kwargs": {"thinking": True}},
-                stream=True
+                max_tokens=4096,
+                extra_body={"chat_template_kwargs": {"thinking": False}},
+                stream=False
             )
             
-            final_content = ""
-            async for chunk in completion:
-                if not getattr(chunk, "choices", None):
-                    continue
-                # We intentionally drop the 'reasoning_content' because we only want the final paper
-                if chunk.choices and chunk.choices[0].delta.content is not None:
-                    final_content += chunk.choices[0].delta.content
+            final_content = completion.choices[0].message.content
                     
             if not final_content:
                  raise ValueError("Empty response returned from DeepSeek.")
