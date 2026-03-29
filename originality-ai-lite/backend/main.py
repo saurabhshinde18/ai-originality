@@ -5,7 +5,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
@@ -169,8 +169,8 @@ Text:
         
         return text + f"\n\n*(Note: Generated securely via Advanced Native Fallback Engine | Fallback Trigger Reason: {error_reason})*"
 
-    async def humanize_text(self, text: str) -> HumanizeResponse:
-        """Transforms AI-generated text into highly human-like text."""
+    async def humanize_text_stream(self, text: str):
+        """Transforms AI-generated text and streams it back."""
         prompt = f"""Rewrite the following text. Do not act like an academic, an expert, or a ghostwriter. If you do, AI detectors will mathematically recognize your underlying probabilistic weights.
 
 Instead, rewrite this exactly as if you are a stressed graduate student transcribing fragmented voice notes into a final draft at 3 AM. 
@@ -195,27 +195,24 @@ Text to Rewrite:
                 top_p=0.9,
                 max_tokens=1500,
                 extra_body={"chat_template_kwargs": {"thinking": False}},
-                stream=False
+                stream=True
             )
             
-            final_content = completion.choices[0].message.content
+            async for chunk in completion:
+                if not getattr(chunk, "choices", None):
+                    continue
+                content = chunk.choices[0].delta.content
+                if content is not None:
+                    yield content
                     
-            if not final_content:
-                 raise ValueError("Empty response returned from DeepSeek.")
-                 
-            humanized = final_content.strip()
-                
-            return HumanizeResponse(humanized_text=humanized)
-            
         except Exception as e:
             logger.error(f"DeepSeek API Error during humanization: {e}. Falling back to in-house model.")
             
-            # Trigger our in-house fallback system!
             try:
                 fallback_text = self._in_house_humanize_fallback(text, error_reason=str(e))
-                return HumanizeResponse(humanized_text=fallback_text)
+                yield fallback_text
             except Exception as fallback_error:
-                raise HTTPException(status_code=500, detail=f"Both Primary and In-House Models Failed: {str(fallback_error)}")
+                yield f"Both Primary and In-House Models Failed: {str(fallback_error)}"
 
 
 # ==========================================
@@ -261,6 +258,6 @@ async def health_check():
 async def api_check_plagiarism(req: TextRequest, ai_service: AIService = Depends(get_ai_service)):
     return await ai_service.check_plagiarism(req.text)
 
-@app.post("/api/humanize", response_model=HumanizeResponse, tags=["AI Processing"])
+@app.post("/api/humanize", tags=["AI Processing"])
 async def api_humanize_text(req: TextRequest, ai_service: AIService = Depends(get_ai_service)):
-    return await ai_service.humanize_text(req.text)
+    return StreamingResponse(ai_service.humanize_text_stream(req.text), media_type="text/plain")

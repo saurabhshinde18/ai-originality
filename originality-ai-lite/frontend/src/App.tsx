@@ -95,7 +95,7 @@ export default function App() {
     if (!inputText.trim()) return;
     setError(null);
     setLoadingState("humanize");
-    setHumanizedText(null);
+    setHumanizedText(""); // Prepare for live streaming
     try {
       const res = await fetch(`${API_BASE}/api/humanize`, {
         method: "POST",
@@ -103,15 +103,31 @@ export default function App() {
         body: JSON.stringify({ text: inputText }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: "Server error" }));
-        throw new Error(err.detail || "Failed to humanize text");
+        throw new Error("Failed to humanize text");
       }
-      const data = await res.json();
-      setHumanizedText(data.humanized_text);
+      
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No stream detected");
+      const decoder = new TextDecoder();
+      
+      // Auto-scroll instantly so the user can watch it type out
       scrollToResults();
+      
+      let isFirstChunk = true;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        if (isFirstChunk) {
+           setLoadingState("idle"); // Hide spinner as soon as first word arrives!
+           isFirstChunk = false;
+        }
+        
+        const chunk = decoder.decode(value, { stream: true });
+        setHumanizedText((prev) => (prev || "") + chunk);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error");
-    } finally {
       setLoadingState("idle");
     }
   }, [inputText]);
@@ -227,7 +243,7 @@ export default function App() {
           {plagiarismData && !isLoading && (
             <PlagiarismResult data={plagiarismData} originalText={inputText} />
           )}
-          {humanizedText && !isLoading && (
+          {humanizedText && (
             <HumanizedResult text={humanizedText} />
           )}
         </div>
