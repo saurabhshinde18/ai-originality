@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-import google.generativeai as genai
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 import asyncio
 
@@ -27,20 +27,18 @@ class Settings:
     """Centralized configuration manager"""
     PROJECT_NAME: str = "Originality AI Lite (Enterprise)"
     VERSION: str = "2.0.0"
-    API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
     ALLOWED_ORIGINS: List[str] = ["*"]
     
     # AI Model configuration
-    MODEL_NAME: str = "gemini-2.0-flash"
-    TEMPERATURE: float = 1.2  # Maximize perplexity
+    MODEL_NAME: str = "deepseek-ai/deepseek-v3.2"
+    TEMPERATURE: float = 1.0  # Maximize perplexity
     TOP_P: float = 0.95       # Allow broader vocabulary selection
 
 settings = Settings()
 
 if not settings.API_KEY:
-    logger.warning("GEMINI_API_KEY is not set. API calls will fail until configured.")
-else:
-    genai.configure(api_key=settings.API_KEY)
+    logger.warning("NVIDIA_API_KEY is not set. API calls will fail until configured.")
 
 # ==========================================
 # 2. Schemas & Data Validation
@@ -60,13 +58,11 @@ class HumanizeResponse(BaseModel):
 # 3. Services (Core Business Logic)
 # ==========================================
 class AIService:
-    """Service layer class handling all interactions with Google Gemini."""
+    """Service layer class handling all interactions with NVIDIA NIM (DeepSeek)."""
     def __init__(self):
-        self.model = genai.GenerativeModel(settings.MODEL_NAME)
-        # Optimized config specifically for bypassing AI detectors
-        self.generation_config = genai.types.GenerationConfig(
-            temperature=settings.TEMPERATURE,
-            top_p=settings.TOP_P,
+        self.client = AsyncOpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=settings.API_KEY
         )
 
     async def check_plagiarism(self, text: str) -> PlagiarismResponse:
@@ -82,9 +78,15 @@ Where score represents the likelihood of plagiarism/AI-generation (0 = fully ori
 Text:
 {text}"""
         try:
-            logger.info("Sending plagiarism analysis request to Gemini...")
-            response = self.model.generate_content(prompt)
-            raw = response.text.strip()
+            logger.info("Sending plagiarism analysis request to DeepSeek...")
+            completion = await self.client.chat.completions.create(
+                model=settings.MODEL_NAME,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                top_p=1.0,
+                max_tokens=2048
+            )
+            raw = completion.choices[0].message.content.strip()
             
             # Clean markdown formatting if model forces it
             raw = re.sub(r"^```(?:json)?\s*", "", raw)
@@ -185,29 +187,33 @@ Text to Rewrite:
 {text}"""
 
         try:
-            model = genai.GenerativeModel(
-                model_name=settings.MODEL_NAME,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.9,  # Human creativity without excessive random hallucinations
-                    top_p=0.95,
-                )
+            completion = await self.client.chat.completions.create(
+                model=settings.MODEL_NAME,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=settings.TEMPERATURE,
+                top_p=settings.TOP_P,
+                max_tokens=8192,
+                extra_body={"chat_template_kwargs": {"thinking": True}},
+                stream=True
             )
             
-            response = await asyncio.to_thread(model.generate_content, prompt)
-            
-            # Google's safety filters can sometimes block the response.text entirely
-            if not response.text:
-                 raise ValueError("Empty response returned from Gemini.")
+            final_content = ""
+            async for chunk in completion:
+                if not getattr(chunk, "choices", None):
+                    continue
+                # We intentionally drop the 'reasoning_content' because we only want the final paper
+                if chunk.choices and chunk.choices[0].delta.content is not None:
+                    final_content += chunk.choices[0].delta.content
+                    
+            if not final_content:
+                 raise ValueError("Empty response returned from DeepSeek.")
                  
-            try:
-                humanized = response.text.strip()
-            except ValueError:
-                raise Exception("Content generation blocked by Gemini safety filters.")
+            humanized = final_content.strip()
                 
             return HumanizeResponse(humanized_text=humanized)
             
         except Exception as e:
-            logger.error(f"Gemini API Error during humanization: {e}. Falling back to in-house model.")
+            logger.error(f"DeepSeek API Error during humanization: {e}. Falling back to in-house model.")
             
             # Trigger our in-house fallback system!
             try:
