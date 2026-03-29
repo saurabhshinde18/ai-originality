@@ -1,0 +1,36 @@
+# Securing API Keys
+.env
+backend/.env
+
+# Node & JS Dependencies
+node_modules/
+frontend/node_modules/
+
+# Python Virtual Environments & Caches
+.venv/
+backend/.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Build Outputs
+frontend/dist/
+dist/
+build/
+
+# OS and IDE files
+.DS_Store
+.vscode/
+.idea/
+
+# Random Documents or Media you don't want pushed
+*.doc
+*.docx
+*.pdf
+*.jpeg
+*.jpg
+*.png
+
+# Ensure requirements.txt is still tracked despite .txt rule (if added later)
+!requirements.txt

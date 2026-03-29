@@ -27,7 +27,7 @@ class Settings:
     PROJECT_NAME: str = "Originality AI Lite (Enterprise)"
     VERSION: str = "2.0.0"
     API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    ALLOWED_ORIGINS: List[str] = ["*"]
     
     # AI Model configuration
     MODEL_NAME: str = "gemini-2.5-flash"
