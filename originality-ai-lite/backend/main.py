@@ -94,10 +94,10 @@ Text:
             
         except json.JSONDecodeError as e:
             logger.error(f"JSON Parse Error: {e} | Raw response: {raw}")
-            raise HTTPException(status_code=502, detail="Invalid unstructured response from AI model")
+            raise HTTPException(status_code=502, detail=f"Invalid response from AI model. Raw output: {raw[:100]}...")
         except Exception as e:
             logger.error(f"AI Service Error during plagiarism check: {e}")
-            raise HTTPException(status_code=500, detail="Failed to process text analysis")
+            raise HTTPException(status_code=500, detail=f"Plagiarism Check API Error: {str(e)}")
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
         """Transforms AI-generated text into highly human-like text."""
@@ -126,7 +126,7 @@ Text to Rewrite:
             
         except Exception as e:
             logger.error(f"AI Service Error during humanization: {e}")
-            raise HTTPException(status_code=500, detail="Failed to humanize text")
+            raise HTTPException(status_code=500, detail=f"Humanize API Error: {str(e)}")
 
 
 # ==========================================
