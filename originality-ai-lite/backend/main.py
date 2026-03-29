@@ -171,17 +171,16 @@ Text:
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
         """Transforms AI-generated text into highly human-like text."""
-        prompt = f"""You are an expert ghostwriter for a peer-reviewed academic journal. Your job is to rewrite the provided text so that it completely bypasses AI detectors like TurnItIn, GPTZero, and Originality.ai, achieving a 0% AI score.
+        prompt = f"""Rewrite the following text. Do not act like an academic, an expert, or a ghostwriter. If you do, AI detectors will mathematically recognize your underlying probabilistic weights.
 
-CRITICAL INSTRUCTIONS FOR 0% AI SCORE:
-1. EXTREME BURSTINESS (MANDATORY): AI writes in perfectly balanced 15-20 word sentences. You MUST break this ratio. Write one sentence that is 5-7 words long. Then, follow it with a massive, highly complex 35-40 word sentence. This uneven rhythm is the single most important factor.
-2. BAN ALL PREDICTABLE TRANSITIONS: Never use "Furthermore," "Moreover," "In conclusion," "Additionally," "Importantly," "Crucial," "Paramount," or "Delving." 
-3. HUMAN SYNTATIC ANOMALIES: Humans use semicolons, em-dashes (—), and parenthetical asides naturally to connect raw scientific thoughts. Inject these occasionally to break standard AI comma patterns.
-4. TONE: Dry, empirical, strictly academic. Avoid all flowery adjectives. Never sound conversational.
-5. NO REPETITIVE STARTERS: Do not start consecutive sentences with "This" or "The".
+Instead, rewrite this exactly as if you are a stressed graduate student transcribing fragmented voice notes into a final draft at 3 AM. 
 
-OUTPUT FORMAT:
-Return strictly the raw rewritten text. No introductions, no metadata, no markdown boxes.
+CRITICAL ANTI-DETECTOR RULES:
+1. SHATTER PREDICTABILITY: Your sentence lengths must be violently uneven. Write a 4-word sentence. Follow it with a massive, meandering 45-word sentence containing multiple semicolons and tangent clauses.
+2. RAW VOCABULARY: Do not use flowery, "smart-sounding" words (e.g., myriad, plethora, delve, crucial, testament to). Use plain, direct, slightly imperfect human words. 
+3. UNUSUAL PUNCTUATION: Humans overuse em-dashes (—) and parentheses to inject random thoughts mid-sentence. You must do this at least twice.
+4. ABSOLUTE BAN LIST: Never use these transition phrases: "Furthermore", "In conclusion", "Additionally", "Moreover", "It is important to note". Start sentences abruptly with the core subject.
+5. NO INTRODUCTIONS: Just output the raw, rewritten text. Do not summarize.
 
 Text to Rewrite:
 {text}"""
@@ -190,9 +189,11 @@ Text to Rewrite:
             completion = await self.client.chat.completions.create(
                 model=settings.MODEL_NAME,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=settings.TEMPERATURE,
-                top_p=settings.TOP_P,
-                max_tokens=4096,
+                temperature=1.0, 
+                presence_penalty=1.5,
+                frequency_penalty=1.5,
+                top_p=0.9,
+                max_tokens=1500,
                 extra_body={"chat_template_kwargs": {"thinking": False}},
                 stream=False
             )
