@@ -11,7 +11,9 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/solid";
 
-const API_BASE = "https://originality-ai-backend.onrender.com";
+const API_BASE = window.location.hostname === "localhost" 
+  ? "http://localhost:8000" 
+  : "https://originality-ai-backend.onrender.com";
 
 interface PlagiarismData {
   score: number;

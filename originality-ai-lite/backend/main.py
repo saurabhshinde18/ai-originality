@@ -176,17 +176,17 @@ Text:
 
     async def humanize_text(self, text: str) -> HumanizeResponse:
         """Transforms AI-generated text into highly human-like, 0% plagiarism text."""
-        sys_prompt = "You are a professional human editor. You must bypass all AI detection algorithms like ZeroGPT."
-        prompt = f"""Rewrite the following text from scratch to bypass AI detectors.
+        sys_prompt = "You are a professional research scientist. Your objective is 0% AI detection markers."
+        prompt = f"""Rewrite the following text so it registers as 100% Human (0% AI) on ZeroGPT and Originality.ai. 
 
-Follow these strict mechanical rules:
-1. BAN TRIPLETS (THE RULE OF THREE): AI models always list exactly three examples (e.g., "apps, platforms, and smart devices" or "choose better, work faster, and learn"). You are strictly forbidden from writing lists of three things. Use only ONE singular, broad concept at a time instead of listing examples.
-2. CONTINUOUS NATURAL FLOW: Stop alternating between 4-word sentences and 40-word sentences. Use a natural, messy, medium-length human flow (around 10-18 words per sentence). Do not write massively long, multi-clause run-on sentences.
-3. BANNED FILLER: Do NOT use standard AI vocabulary: crucial, paramount, landscape, myriad, testament, robust, intricate, seamless, pivotal, utilize, delving.
-4. BANNED TRANSITIONS: Do NOT start sentences with Therefore, Moreover, Furthermore, Thus, However, or Additionally.
-5. CASUAL ACADEMIC TONE: Write as if you are a highly intelligent human expert directly explaining a concept verbally to a peer. Do not sound like a structured textbook.
+CRITICAL MECHANICAL CONSTRAINTS (MANDATORY):
+1. NO CONTRACTIONS/INFORMALITIES: Strictly ban words like "tech", "stuff", "really", "basically", or "matter a lot". Use formal equivalents: "technological advancements", "automated systems", "significant", "fundamental".
+2. UNPREDICTABLE STARTING TOKENS: Do not start sentences with "The", "Technology", or "This". Start at least 50% of sentences with gerunds (e.g., "Integrating..."), prepositions (e.g., "Despite..."), or adverbs (e.g., "Paradoxically...").
+3. SYNTAX VARIANCE: AI writes in a Subject-Verb-Object rhythm. You must use inverted syntax and nested parenthetical clauses to shatter the probabilistic weight of the text.
+4. BANNED LINGUISTIC MARKERS: Absolutely ban: "crucial", "paramount", "testament", "landscape", "moreover", "furthermore", "in conclusion".
+5. NO TRIPLETS: Never list three items. If you have a list, use two items or four, but never three.
 
-Return STRICTLY the rewritten text. No introductions.
+Return ONLY the rewritten research text.
 
 Text to Rewrite:
 {text}"""
