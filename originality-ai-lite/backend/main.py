@@ -189,9 +189,9 @@ Text to Rewrite:
             completion = await self.client.chat.completions.create(
                 model=settings.MODEL_NAME,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=1.0, 
+                temperature=0.9, 
                 top_p=0.9,
-                max_tokens=1500,
+                max_tokens=1000,
                 extra_body={"chat_template_kwargs": {"thinking": False}},
                 stream=False
             )
